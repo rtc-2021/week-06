@@ -136,7 +136,8 @@ function handleRtcTrack({ track, streams: [stream] }) {
 }
 
 function handleRtcDataChannel({ channel }) {
-  console.log('Heard a data channel event', channel.label);
+  console.log('Heard channel', channel.label,
+    'with ID', channel.id);
   document.querySelector('#peer')
     .className = channel.label;
 }
