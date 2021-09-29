@@ -2,7 +2,6 @@
 
 const $self = {
   rtcConfig: null,
-  constraints: { audio: false, video: true },
   isPolite: false,
   isMakingOffer: false,
   isIgnoringOffer: false,
@@ -13,14 +12,6 @@ const $peer = {
   connection: new RTCPeerConnection($self.rtcConfig)
 };
 
-requestUserMedia($self.constraints);
-
-async function requestUserMedia(constraints) {
-  $self.stream = await navigator.mediaDevices
-    .getUserMedia(constraints);
-  displayStream('#self', $self.stream);
-}
-
 /**
 * Socket Server Events and Callbacks
 */
@@ -30,40 +21,19 @@ const sc = io(`/${namespace}`, { autoConnect: false });
 
 registerScEvents();
 
-/* SpecialFX Classes */
-const VideoFX = class {
-  constructor() {
-    this.filters = ['grayscale', 'sepia', 'blur', 'none'];
-  }
-  cycleFilter() {
-    const filter = this.filters.shift();
-    this.filters.push(filter);
-    return filter;
-  }
-}
 
-$self.fx = new VideoFX();
 
 /* DOM Elements */
 
 const button = document
   .querySelector('#call-button');
 
-const selfVideo = document
-  .querySelector('#self');
-
 button.addEventListener('click', handleButton);
 
-selfVideo.addEventListener('click', handleSelfVideo);
-
 document.querySelector('#header h1')
-  .innerText = `Welcome to Room #${namespace}`;
+  .innerText = `Welcome to Text Chat #${namespace}`;
 
-/* User-Media/DOM */
-function displayStream(selector, stream) {
-  const video = document.querySelector(selector);
-  video.srcObject = stream;
-}
+
 
 /* DOM Events */
 
@@ -80,15 +50,6 @@ function handleButton(e) {
   }
 }
 
-function handleSelfVideo(e) {
-  const filter = $self.fx.cycleFilter();
-  const dc = $peer.connection.createDataChannel(`filter-${filter}`);
-  e.target.className = `filter-${filter}`;
-  dc.onclose = function() {
-    console.log('The channel for', dc.label, 'is now closed');
-  }
-}
-
 function joinCall() {
   sc.open();
   registerRtcEvents($peer);
@@ -97,16 +58,13 @@ function joinCall() {
 function leaveCall() {
   $peer.connection.close();
   $peer.connection = new RTCPeerConnection($self.rtcConfig);
-  displayStream('#peer', null);
   sc.close();
 }
 
 /* WebRTC Events */
 
 function establishCallFeatures(peer) {
-  peer.connection
-    .addTrack($self.stream.getTracks()[0],
-      $self.stream);
+
 }
 
 function registerRtcEvents(peer) {
@@ -114,8 +72,6 @@ function registerRtcEvents(peer) {
     .onnegotiationneeded = handleRtcNegotiation;
   peer.connection
     .onicecandidate = handleIceCandidate;
-  peer.connection
-    .ontrack = handleRtcTrack;
   peer.connection
     .ondatachannel = handleRtcDataChannel;
 }
@@ -133,21 +89,11 @@ function handleIceCandidate({ candidate }) {
   sc.emit('signal', { candidate:
     candidate });
 }
-function handleRtcTrack({ track, streams: [stream] }) {
-  // attach incoming track to the DOM
-  displayStream('#peer', stream);
-}
 
 function handleRtcDataChannel({ channel }) {
   const dc = channel;
   console.log('Heard channel', dc.label,
     'with ID', dc.id);
-  document.querySelector('#peer')
-    .className = dc.label;
-  dc.onopen = function() {
-    console.log('Now I have heard the channel open');
-    dc.close();
-  };
 }
 
 /* Signaling Channel Events */
