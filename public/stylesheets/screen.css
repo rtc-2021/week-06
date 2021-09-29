@@ -55,3 +55,15 @@ video {
 #self {
   width: 50%;
 }
+
+/* Video Filters */
+
+.filter-grayscale {
+  filter: grayscale(100%);
+}
+.filter-sepia {
+  filter: sepia(100%);
+}
+.filter-blur {
+  filter: blur(4px);
+}
