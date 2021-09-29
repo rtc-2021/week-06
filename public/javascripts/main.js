@@ -88,6 +88,8 @@ function registerRtcEvents(peer) {
     .onicecandidate = handleIceCandidate;
   peer.connection
     .ontrack = handleRtcTrack;
+  peer.connection
+    .ondatachannel = handleRtcDataChannel;
 }
 
 async function handleRtcNegotiation() {
@@ -106,6 +108,12 @@ function handleIceCandidate({ candidate }) {
 function handleRtcTrack({ track, streams: [stream] }) {
   // attach incoming track to the DOM
   displayStream('#peer', stream);
+}
+
+function handleRtcDataChannel({ channel }) {
+  console.log('Heard a data channel event', channel);
+  $peer.testChannel = channel;
+  console.log('The label is:', $peer.testChannel.label);
 }
 
 /* Signaling Channel Events */
