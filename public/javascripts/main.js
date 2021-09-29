@@ -84,6 +84,9 @@ function handleSelfVideo(e) {
   const filter = $self.fx.cycleFilter();
   const dc = $peer.connection.createDataChannel(`filter-${filter}`);
   e.target.className = `filter-${filter}`;
+  dc.onclose = function() {
+    console.log('The channel for', dc.label, 'is now closed');
+  }
 }
 
 function joinCall() {
@@ -136,10 +139,15 @@ function handleRtcTrack({ track, streams: [stream] }) {
 }
 
 function handleRtcDataChannel({ channel }) {
-  console.log('Heard channel', channel.label,
-    'with ID', channel.id);
+  const dc = channel;
+  console.log('Heard channel', dc.label,
+    'with ID', dc.id);
   document.querySelector('#peer')
-    .className = channel.label;
+    .className = dc.label;
+  dc.onopen = function() {
+    console.log('Now I have heard the channel open');
+    dc.close();
+  };
 }
 
 /* Signaling Channel Events */
